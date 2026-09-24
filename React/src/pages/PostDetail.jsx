@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { postsApi, getErrorMessage } from '../api/endpoints'
+import { postsApi, groupsApi, getErrorMessage } from '../api/endpoints'
 import CommentForm from '../components/CommentForm.jsx'
 import PostForm from '../components/PostForm.jsx'
 import Loader from '../components/Loader.jsx'
@@ -21,6 +21,13 @@ export default function PostDetail() {
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [groups, setGroups] = useState([])
+
+  useEffect(() => {
+  groupsApi.list()
+    .then((res) => setGroups(Array.isArray(res.data) ? res.data : res.data?.items ?? []))
+    .catch(() => setGroups([]))
+  }, [])
 
   const load = useCallback(() => {
   setLoading(true)
@@ -63,6 +70,7 @@ export default function PostDetail() {
       <div className="page">
         <PostForm
           initial={post}
+          groups={groups}
           onSaved={() => { setEditing(false); load() }}
           onCancel={() => setEditing(false)}
         />

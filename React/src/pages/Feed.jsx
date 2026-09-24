@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { postsApi, normalizePage, getErrorMessage } from '../api/endpoints'
+import { postsApi, groupsApi, normalizePage, getErrorMessage } from '../api/endpoints'
 import PostCard from '../components/PostCard.jsx'
 import PostForm from '../components/PostForm.jsx'
 import Loader from '../components/Loader.jsx'
 import Pagination from '../components/Pagination.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { groupsApi } from '../api/endpoints'
 
 export default function Feed() {
   const { token } = useAuth()
@@ -16,22 +15,22 @@ export default function Feed() {
   const [data, setData] = useState({ items: [], next: null, previous: null, count: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showForm, setShowForm] = useState(false)
+
+  const [showForm, setShowForm] = useState(false)   // создание
+  const [editing, setEditing] = useState(null)      // 👈 редактирование
   const [groups, setGroups] = useState([])
 
   useEffect(() => {
-  groupsApi.list()
-    .then((res) => setGroups(Array.isArray(res.data) ? res.data : res.data?.items ?? []))
-    .catch(() => setGroups([]))
+    groupsApi.list()
+      .then((res) => setGroups(Array.isArray(res.data) ? res.data : res.data?.items ?? []))
+      .catch(() => setGroups([]))
   }, [])
 
   const load = (opts = {}) => {
     setLoading(true)
     setError(null)
     postsApi.feed(opts)
-      .then((res) => {
-        setData(normalizePage(res.data))
-      })
+      .then((res) => setData(normalizePage(res.data)))
       .catch((err) => setError(getErrorMessage(err)))
       .finally(() => setLoading(false))
   }
@@ -49,12 +48,25 @@ export default function Feed() {
     if (!url) load({ q: q.trim() })
   }
 
+  const onCreated = () => {
+    setShowForm(false)
+    load({ q: query })
+  }
+
+  const onEdited = () => {
+    setEditing(null)
+    load({ q: query })
+  }
+
   return (
     <div className="page">
       <div className="page__head">
         <h1 className="page__title">Лента</h1>
         {token && (
-          <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>
+          <button
+            className="btn btn-primary"
+            onClick={() => { setEditing(null); setShowForm((v) => !v) }}
+          >
             {showForm ? 'Закрыть' : '+ Новый пост'}
           </button>
         )}
@@ -63,8 +75,18 @@ export default function Feed() {
       {showForm && (
         <PostForm
           groups={groups}
-          onSaved={() => { setShowForm(false); load({ q: query }) }}
+          onSaved={onCreated}
           onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {/* 👇 форма редактирования */}
+      {editing && (
+        <PostForm
+          initial={editing}
+          groups={groups}
+          onSaved={onEdited}
+          onCancel={() => setEditing(null)}
         />
       )}
 
@@ -77,7 +99,11 @@ export default function Feed() {
         />
         <button className="btn btn-primary">Найти</button>
         {query && (
-          <button type="button" className="btn btn-ghost" onClick={() => { setQ(''); setQuery(''); setUrl(null); setPage(1) }}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => { setQ(''); setQuery(''); setUrl(null); setPage(1) }}
+          >
             Сбросить
           </button>
         )}
@@ -96,6 +122,11 @@ export default function Feed() {
             key={post.id}
             post={post}
             onDeleted={(id) => setData((d) => ({ ...d, items: d.items.filter((p) => p.id !== id) }))}
+            onChanged={(post) => {            // 👈 вот этой строки не хватало
+              setShowForm(false)
+              setEditing(post)
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
           />
         ))}
       </div>

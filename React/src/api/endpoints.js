@@ -62,14 +62,12 @@ export const postsApi = {
 }
 
 export const usersApi = {
-  // GET /profile/me
   me: () => client.get('/profile/me'),
-  // GET /profile/{username}
   profile: (username) => client.get(`/profile/${username}`),
-  // POST /profile/{username}/follow/
   follow: (username) => client.post(`/profile/${username}/follow/`),
-  // DELETE /profile/{username}/follow/
   unfollow: (username) => client.delete(`/profile/${username}/follow/`),
+  updateMe: (data) => client.patch('/users/me', data),
+  deleteMe: () => client.delete('/users/me'),
 }
 
 // FastAPI-Users:

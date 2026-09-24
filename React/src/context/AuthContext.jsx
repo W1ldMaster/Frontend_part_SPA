@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
     }
     try {
       const { data } = await usersApi.me()
-      setUser(data)
+      setUser(data?.author ?? data)
     } catch {
       setUser(null)
     } finally {
@@ -37,23 +37,16 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:logout', onLogout)
   }, [])
 
-  const login = async (username, password) => {
-    const data = await authApi.login(username, password)
+  const login = async (email, password) => {
+    const data = await authApi.login(email, password)
     const access = data.access_token || data.access
     localStorage.setItem('token', access)
     setToken(access)
   }
 
-  const loginWithToken = (raw) => {
-    localStorage.setItem('token', raw)
-    setToken(raw)
-  }
-
-  // 👇 ВОТ ЭТО ЧАСТО ЗАБЫВАЮТ
   const register = async (email, password, username) => {
     await authApi.register({ email, password, username })
-    // авто-логин после регистрации
-    await login(username || email, password)
+    await login(email, password)
   }
 
   const logout = () => {
@@ -64,16 +57,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{
-        token,
-        user,
-        loading,
-        login,
-        loginWithToken,
-        register,   // 👈 ОБЯЗАТЕЛЬНО в value
-        logout,
-        reload: loadUser,
-      }}
+      value={{ token, user, loading, login, register, logout, reload: loadUser }}
     >
       {children}
     </AuthContext.Provider>

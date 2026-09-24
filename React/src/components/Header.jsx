@@ -20,15 +20,37 @@ export default function Header() {
         </Link>
 
         <nav className="nav">
-          <NavLink to="/" end className={({isActive}) => 'nav__link' + (isActive ? ' is-active' : '')}>Лента</NavLink>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => 'nav__link' + (isActive ? ' is-active' : '')}
+          >
+            Лента
+          </NavLink>
+
           {token && (
-            <NavLink to="/follow" className={({isActive}) => 'nav__link' + (isActive ? ' is-active' : '')}>Подписки</NavLink>
+            <NavLink
+              to="/follow"
+              className={({ isActive }) => 'nav__link' + (isActive ? ' is-active' : '')}
+            >
+              Подписки
+            </NavLink>
           )}
-          <NavLink to="/groups" className={({isActive}) => 'nav__link' + (isActive ? ' is-active' : '')}>Группы</NavLink>
+
+          <NavLink
+            to="/groups"
+            className={({ isActive }) => 'nav__link' + (isActive ? ' is-active' : '')}
+          >
+            Группы
+          </NavLink>
         </nav>
 
         <div className="header__actions">
-          <button className="theme-toggle" onClick={toggleTheme} title="Сменить тему">
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title="Сменить тему"
+          >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
@@ -37,10 +59,19 @@ export default function Header() {
               <Link to="/profile/me" className="btn btn-ghost">
                 {user?.username ? `@${user.username}` : 'Профиль'}
               </Link>
-              <button className="btn btn-primary" onClick={handleLogout}>Выйти</button>
+
+              <Link to="/settings" className="btn btn-ghost" title="Настройки">
+                ⚙️
+              </Link>
+
+              <button className="btn btn-primary" onClick={handleLogout}>
+                Выйти
+              </button>
             </>
           ) : (
-            <Link to="/login" className="btn btn-primary">Войти</Link>
+            <Link to="/login" className="btn btn-primary">
+              Войти
+            </Link>
           )}
         </div>
       </div>

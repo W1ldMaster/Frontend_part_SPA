@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssa_frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - ssa_net
+
+networks:
+  ssa_net:
+    external: true
+    name: ssa_net
