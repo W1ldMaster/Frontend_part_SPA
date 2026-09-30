@@ -69,7 +69,7 @@ export default function Profile({ me = false }) {
           <div className="profile__info">
             <h1 className="profile__name">@{profile.author?.username}</h1>
             <div className="profile__stats">
-              <span><b>{profile.total_posts ?? posts.length}</b> постов</span>
+              <span>Количество постов: <b>{profile.total_posts ?? posts.length}</b></span>
             </div>
           </div>
 
