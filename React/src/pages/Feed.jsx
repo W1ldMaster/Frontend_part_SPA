@@ -80,7 +80,6 @@ export default function Feed() {
         />
       )}
 
-      {/* 👇 форма редактирования */}
       {editing && (
         <PostForm
           initial={editing}
