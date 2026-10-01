@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { usersApi, getErrorMessage } from '../api/endpoints'
 import { useAuth } from '../context/AuthContext.jsx'
+import ConfirmModal from '../components/ConfirmModal'
 
 export default function Settings() {
   const { user, reload, logout } = useAuth()
@@ -15,6 +16,7 @@ export default function Settings() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [ok, setOk] = useState(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -38,7 +40,7 @@ export default function Settings() {
       }
 
       await usersApi.updateMe(payload)
-      await reload?.()          // перечитать user в AuthContext
+      await reload?.()
       setPassword('')
       setPassword2('')
       setOk('Сохранено')
@@ -49,15 +51,21 @@ export default function Settings() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!window.confirm('Удалить аккаунт безвозвратно?')) return
+  const handleDeleteClick = () => {
+    setError(null)
+    setConfirmOpen(true)
+  }
+
+  const handleDeleteConfirmed = async () => {
     setBusy(true)
     try {
       await usersApi.deleteMe()
+      setConfirmOpen(false)
       logout()
       navigate('/')
     } catch (err) {
       setError(getErrorMessage(err))
+      setConfirmOpen(false)
     } finally {
       setBusy(false)
     }
@@ -129,10 +137,22 @@ export default function Settings() {
       <div className="card">
         <h3 className="post-form__title">Опасная зона</h3>
         <p className="muted">Удаление аккаунта необратимо.</p>
-        <button className="btn btn-danger" onClick={handleDelete} disabled={busy}>
+        <button className="btn btn-danger" onClick={handleDeleteClick} disabled={busy}>
           Удалить аккаунт
         </button>
       </div>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Удалить аккаунт безвозвратно?"
+        message="Все ваши посты, комментарии и подписки будут удалены без возможности восстановления. Это действие необратимо."
+        confirmText="Удалить аккаунт"
+        cancelText="Отмена"
+        danger
+        busy={busy}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => !busy && setConfirmOpen(false)}
+      />
     </div>
   )
 }

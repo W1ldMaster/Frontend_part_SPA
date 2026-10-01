@@ -1,7 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { postsApi, getErrorMessage } from '../api/endpoints'
 import { useState } from 'react'
+import ConfirmModal from './ConfirmModal'
 
 function shortDate(v) {
   if (!v) return ''
@@ -17,9 +18,9 @@ function shortDate(v) {
 
 export default function PostCard({ post, onDeleted, onChanged }) {
   const { user, token } = useAuth()
-  const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const author = post.author || post.user || {}
   const authorName = author.username || post.author_username || 'anon'
@@ -27,14 +28,20 @@ export default function PostCard({ post, onDeleted, onChanged }) {
   const body = post.text || post.content || ''
   const isOwner = user?.username && authorName === user.username
 
-  const handleDelete = async () => {
-    if (!window.confirm('Удалить пост?')) return
+  const handleDeleteClick = () => {
+    setError(null)
+    setConfirmOpen(true)
+  }
+
+  const handleDeleteConfirmed = async () => {
     setBusy(true)
     try {
       await postsApi.remove(post.id)
+      setConfirmOpen(false)
       onDeleted?.(post.id)
     } catch (err) {
       setError(getErrorMessage(err))
+      setConfirmOpen(false)
     } finally {
       setBusy(false)
     }
@@ -82,7 +89,7 @@ export default function PostCard({ post, onDeleted, onChanged }) {
             </button>
             <button
               className="btn btn-danger btn-sm"
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
               disabled={busy}
             >
               Удалить
@@ -90,6 +97,18 @@ export default function PostCard({ post, onDeleted, onChanged }) {
           </>
         )}
       </footer>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Удалить пост?"
+        message="Пост и все комментарии к нему будут удалены безвозвратно."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        danger
+        busy={busy}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => !busy && setConfirmOpen(false)}
+      />
     </article>
   )
 }

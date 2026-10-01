@@ -4,6 +4,7 @@ import { postsApi, groupsApi, getErrorMessage } from '../api/endpoints'
 import CommentForm from '../components/CommentForm.jsx'
 import PostForm from '../components/PostForm.jsx'
 import Loader from '../components/Loader.jsx'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function shortDate(v) {
@@ -22,35 +23,42 @@ export default function PostDetail() {
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [groups, setGroups] = useState([])
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
-  groupsApi.list()
-    .then((res) => setGroups(Array.isArray(res.data) ? res.data : res.data?.items ?? []))
-    .catch(() => setGroups([]))
+    groupsApi.list()
+      .then((res) => setGroups(Array.isArray(res.data) ? res.data : res.data?.items ?? []))
+      .catch(() => setGroups([]))
   }, [])
 
   const load = useCallback(() => {
-  setLoading(true)
-  setError(null)
-  postsApi.detail(postId)
-    .then((res) => {
-      const data = res.data
-      setPost(data.post ?? data)
-    })
-    .catch((err) => setError(getErrorMessage(err)))
-    .finally(() => setLoading(false))
-}, [postId])
+    setLoading(true)
+    setError(null)
+    postsApi.detail(postId)
+      .then((res) => {
+        const data = res.data
+        setPost(data.post ?? data)
+      })
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setLoading(false))
+  }, [postId])
 
   useEffect(() => { load() }, [load])
 
-  const onDelete = async () => {
-    if (!window.confirm('Удалить пост?')) return
+  const handleDeleteClick = () => {
+    setError(null)
+    setConfirmOpen(true)
+  }
+
+  const handleDeleteConfirmed = async () => {
     setBusy(true)
     try {
       await postsApi.remove(postId)
+      setConfirmOpen(false)
       navigate('/')
     } catch (err) {
       setError(getErrorMessage(err))
+      setConfirmOpen(false)
     } finally {
       setBusy(false)
     }
@@ -94,7 +102,7 @@ export default function PostDetail() {
         {isOwner && (
           <div className="post-detail__actions">
             <button className="btn btn-ghost" onClick={() => setEditing(true)}>Изменить</button>
-            <button className="btn btn-danger" onClick={onDelete} disabled={busy}>Удалить</button>
+            <button className="btn btn-danger" onClick={handleDeleteClick} disabled={busy}>Удалить</button>
           </div>
         )}
       </article>
@@ -124,6 +132,18 @@ export default function PostDetail() {
           )
         })}
       </div>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Удалить пост?"
+        message="Пост и все комментарии к нему будут удалены безвозвратно."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        danger
+        busy={busy}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => !busy && setConfirmOpen(false)}
+      />
     </div>
   )
 }
