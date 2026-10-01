@@ -50,7 +50,7 @@ React/
 
 ## ⚙️ Переменные окружения
 
-`.env` (по образцу `.env.example`):
+`.env` (по образцу `.envexample`):
 
 ```env
 VITE_API_URL=/api
@@ -385,6 +385,6 @@ curl.exe -4 http://127.0.0.1:8080/api/posts/
 ## 🔗 Связанные сервисы
 
 - **Backend API:** `http://127.0.0.1:8000` (Swagger: `/docs`)
-- **Backend репозиторий:** `../Backend/FastApiProject/README.md`
+- **Backend репозиторий:** [Ссылка на репозиторий](https://github.com/W1ldMaster/Backend_Part_SPA)
 - **PostgreSQL:** контейнер `ssa_db`, порт 5432
 - **Общая Docker-сеть:** `ssa_net` (external)
