@@ -97,11 +97,19 @@ export default function PostCard({ post, onDeleted, onChanged }) {
         {post.title && <h3 className="post-card__title">{post.title}</h3>}
         {body && <p className="post-card__text">{body}</p>}
         {post.image && (
-          <img
-            src={post.image}
-            alt="Вложение"
-            style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '12px' }}
-          />
+          <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+            <img
+              src={post.image}
+              alt="Вложение"
+              style={{
+                width: '30%',
+                maxHeight: '250px',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                backgroundColor: '#1c1c1e'
+              }}
+            />
+          </div>
         )}
       </Link>
 
