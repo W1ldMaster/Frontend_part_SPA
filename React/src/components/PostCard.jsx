@@ -22,6 +22,10 @@ export default function PostCard({ post, onDeleted, onChanged }) {
   const [error, setError] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
+  const [isLiked, setIsLiked] = useState(post.is_liked || false)
+  const [likesCount, setLikesCount] = useState(post.likes_count || 0)
+  const [likeBusy, setLikeBusy] = useState(false)
+
   const author = post.author || post.user || {}
   const authorName = author.username || post.author_username || 'anon'
   const group = post.group || null
@@ -44,6 +48,28 @@ export default function PostCard({ post, onDeleted, onChanged }) {
       setConfirmOpen(false)
     } finally {
       setBusy(false)
+    }
+  }
+
+  const handleLike = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!token || likeBusy) return
+
+    setLikeBusy(true)
+    try {
+      if (isLiked) {
+        await postsApi.unlike(post.id)
+        setLikesCount((c) => Math.max(0, c - 1))
+      } else {
+        await postsApi.like(post.id)
+        setLikesCount((c) => c + 1)
+      }
+      setIsLiked(!isLiked)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLikeBusy(false)
     }
   }
 
@@ -70,24 +96,44 @@ export default function PostCard({ post, onDeleted, onChanged }) {
       <Link to={`/posts/${post.id}`} className="post-card__link">
         {post.title && <h3 className="post-card__title">{post.title}</h3>}
         {body && <p className="post-card__text">{body}</p>}
+        {post.image && (
+          <img
+            src={post.image}
+            alt="Вложение"
+            style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '12px' }}
+          />
+        )}
       </Link>
 
       {error && <div className="alert alert--error">{error}</div>}
 
-      <footer className="post-card__foot">
+      <footer className="post-card__foot" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <Link to={`/posts/${post.id}`} className="btn btn-ghost btn-sm">
           Комментарии
         </Link>
 
+        {token && (
+          <button
+            type="button"
+            className={`btn btn-sm ${isLiked ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={handleLike}
+            disabled={likeBusy}
+          >
+            {isLiked ? '❤️' : '🤍'} {likesCount}
+          </button>
+        )}
+
         {token && isOwner && (
           <>
             <button
+              type="button"
               className="btn btn-ghost btn-sm"
               onClick={() => onChanged?.(post)}
             >
               Изменить
             </button>
             <button
+              type="button"
               className="btn btn-danger btn-sm"
               onClick={handleDeleteClick}
               disabled={busy}

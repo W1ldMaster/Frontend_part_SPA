@@ -1,7 +1,5 @@
 import client from './client'
 
-// Утилита: превращает абсолютный URL (next/previous) в относительный путь,
-// чтобы запрос уходил через Vite-proxy
 export function toPath(url) {
   if (!url) return null
   try {
@@ -12,7 +10,6 @@ export function toPath(url) {
   }
 }
 
-// Нормализация ответа Page[...] — поддерживаем DRF-пагинацию и обычные массивы
 export function normalizePage(data) {
   if (Array.isArray(data)) {
     return { items: data, next: null, previous: null, count: data.length }
@@ -31,34 +28,28 @@ export function getErrorMessage(err) {
   if (!d) return err.message || 'Ошибка сети'
   if (typeof d === 'string') return d
   if (d.detail) return Array.isArray(d.detail) ? d.detail.map(x => x.msg).join(', ') : d.detail
-  // FastAPI-ошибки валидации
   const first = Object.values(d)[0]
   if (Array.isArray(first)) return first.join(', ')
   return 'Что-то пошло не так'
 }
 
 export const postsApi = {
-  // GET /posts/?q=
   feed: ({ q, url } = {}) => {
     if (url) return client.get(toPath(url))
     return client.get('/posts/', { params: q ? { q } : {} })
   },
-  // GET /follow/
   followFeed: ({ url } = {}) => client.get(url ? toPath(url) : '/follow/'),
-  // GET /groups/{slug}/
   groupPosts: (slug) => client.get(`/groups/${slug}/`),
-  // GET /groups/
   listGroups: () => client.get('/groups/'),
-  // POST /posts/
   create: (data) => client.post('/posts/', data),
-  // PATCH /posts/{id}/
   update: (id, data) => client.patch(`/posts/${id}/`, data),
-  // DELETE /posts/{id}/
   remove: (id) => client.delete(`/posts/${id}/`),
-  // GET /posts/{id}
   detail: (id) => client.get(`/posts/${id}`),
-  // POST /posts/{id}/comments/
   addComment: (id, data) => client.post(`/posts/${id}/comments/`, data),
+  like: (postId) => client.post(`/posts/${postId}/like`),
+  unlike: (postId) => client.delete(`/posts/${postId}/like`),
+  updateComment: (postId, commentId, data) => client.patch(`/posts/${postId}/comments/${commentId}/`, data),
+  removeComment: (postId, commentId) => client.delete(`/posts/${postId}/comments/${commentId}/`),
 }
 
 export const usersApi = {
@@ -70,9 +61,6 @@ export const usersApi = {
   deleteMe: () => client.delete('/users/me'),
 }
 
-// FastAPI-Users:
-//   POST /auth/register  { email, password, username? }  → 201 { id, email, ... }
-//   POST /auth/jwt/login form-urlencoded { username, password } → { access_token }
 export const authApi = {
   register: async ({ email, password, username }) => {
     const payload = { email, password }
@@ -80,13 +68,12 @@ export const authApi = {
     const res = await client.post('/auth/register', payload)
     return res.data
   },
-
   login: async (username, password) => {
     const body = new URLSearchParams({ username, password })
     const res = await client.post('/auth/jwt/login', body, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
-    return res.data // { access_token, token_type }
+    return res.data
   },
 }
 
